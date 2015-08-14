@@ -1,5 +1,7 @@
 # memcached-manager
 Another Memcached Manager for php.
 
-* Allow delete keys by prefix.
-* Allow delete keys by pattern.
+## Features
+* Istantantiate Memcached with a prefix for the app.
+* Delete keys by prefix.
+* Dlete keys by pattern.
