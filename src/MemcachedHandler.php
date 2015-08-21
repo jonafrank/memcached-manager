@@ -276,6 +276,12 @@ class MemcachedHandler extends \Memcached
 		return parent::setByKey($server_key, $key, $value, $expiration);
 	}
 
+	/**
+	 * Add the prefix to the keys of the given array
+	 *
+	 * @param array $items
+	 * @return array
+	 */
 	private function prefixArrayKeys(array $items)
 	{
 		$prefixed = array();
@@ -285,10 +291,40 @@ class MemcachedHandler extends \Memcached
 		return $prefixed;
 	}
 
+	/**
+	 * @inheritdoc
+	 */
 	public function setMulti(array $items, $expiration = null)
 	{
 		$items = $this->prefixArrayKeys($items);
 		return parent::setMulti($items, $expiration);
 	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function setMultiByKey($server_key, array $items, $expiration = null)
+	{
+		$items = $this->prefixArrayKeys($items);
+		return parent::setMultiByKey($server_key, $items, $expiration);
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function touch($key, $expiration)
+	{
+		$key = $this->prefix . $key;
+        return parent::touch($key, $expiration);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function touchByKey($server_key, $key, $expiration)
+    {
+        $key = $this->prefix . $key;
+        return parent::touchByKey($server_key, $key, $expiration);
+    }
 
 }
