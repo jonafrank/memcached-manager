@@ -1,12 +1,26 @@
 {
-	"name": "jonafrank/memcached-manager",
-	"require": {
-		"php": ">=5.4.0",
-		"ext-memcached": "<=2.1.0"
-	},
-	"autoload": {
-		"psr-4": {
-			"MemcachedManager": "src/"
-		}
-	}
+    "name": "jonafrank/memcached-manager",
+    "description": "A memcached Handler that allows prefixes and regex deletions",
+    "license": "apache",
+    "authors": [
+        {
+            "name": "Jonatan Frank",
+            "email": "jonafrank@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "ext-memcached": "<=2.1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MemcachedManager\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MemcachedManagerTests\\": "tests/"
+        }
+    }
+
 }

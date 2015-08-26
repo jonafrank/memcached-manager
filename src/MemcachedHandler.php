@@ -4,15 +4,25 @@ namespace MemcachedManager;
 class MemcachedHandler extends \Memcached
 {
 	private $prefix;
+    private $host;
+    private $port;
 
-	public function __construct($prefix = '', $persistent_id = null)
+    /**
+     * @inheritdoc
+     * @codeCoverageIgnore
+     */
+	public function __construct($prefix = '', $host = 'localhost', $port = 11211, $persistent_id = null)
 	{
 		parent::__construct($persistent_id);
-		$this->prefix = $prefix;
+        $this->host = $host;
+        $this->port = 11211;
+        $this->addServer($this->host, $this->port);
+        $this->prefix = $prefix;
 	}
 
 	/**
 	 * @param string $prefix
+     * @codeCoverageIgnore
 	 */
 	public function setPrefix($prefix)
 	{
@@ -21,12 +31,22 @@ class MemcachedHandler extends \Memcached
 
 	/**
 	 * @return string
+     * @codeCoverageIgnore
 	 */
 	public function getPrefix()
 	{
 		return $this->prefix;
 	}
 
+    public function getHost()
+    {
+        return $this->host;
+    }
+
+    public function getPort()
+    {
+        return $this->host;
+    }
 	/**
 	 * @inheritdoc
 	 */
@@ -327,4 +347,23 @@ class MemcachedHandler extends \Memcached
         return parent::touchByKey($server_key, $key, $expiration);
     }
 
+    /**
+     * Delete of items for the set Key and throws exception if this is empty.
+     *
+     * @return bool
+     * @throws \Exception
+     */
+	public function deleteAllForKey()
+	{
+		if (empty($this->prefix)) {
+            throw new \Exception('To use this method the prefix can not be empty', 500);
+        }
+        $keys = $this->getAllKeys();
+        foreach ($keys as $arrayKey => $value) {
+            if (strpos($value, $this->prefix) !== 0) {
+                unset($keys[$arrayKey]);
+            }
+        }
+        return parent::deleteMulti($keys);
+	}
 }
