@@ -61,5 +61,6 @@ class MemcachedHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->memcached->get('MHT_test2'));
         $this->assertFalse($this->memcached->get('MHT_test3'));
         $this->assertEquals('value4', $this->memcached->get('noPrefixKey'));
+        $this->memcached->delete('noPrefixKey');
     }
 }
