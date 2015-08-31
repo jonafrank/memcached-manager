@@ -2,6 +2,6 @@
 Another Memcached Manager for php.
 
 ## Features
-* Istantantiate Memcached with a prefix for the app.
+* Instantiate Memcached with a prefix for the app.
 * Delete keys by prefix.
-* Dlete keys by pattern.
+* Delete keys by shell pattern.

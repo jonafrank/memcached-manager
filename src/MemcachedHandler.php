@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace MemcachedManager;
 
 class MemcachedHandler extends \Memcached
@@ -18,6 +18,9 @@ class MemcachedHandler extends \Memcached
         $this->port = 11211;
         $this->addServer($this->host, $this->port);
         $this->prefix = $prefix;
+        if(empty($prefix)) {
+            $this->prefix = (string) rand(100, 999);
+        }
 	}
 
 	/**
@@ -68,19 +71,19 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function append($key, $value)
+	public function append($key, $value, $expiration = null)
 	{
 		$key = $this->prefix . $key;
-		return parent::append($key, $value);
+		return parent::append($key, $value, $expiration);
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	public function appendByKey($server_key, $key, $value)
+	public function appendByKey($server_key, $key, $value, $expiration = null)
 	{
 		$key = $this->prefix . $key;
-		return parent::appendByKey($server_key, $key, $value);
+		return parent::appendByKey($server_key, $key, $value, $expiration = null);
 	}
 
 	/**
@@ -155,7 +158,7 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function deleteMulti(array $keys, $time = 0)
+	public function deleteMulti($keys, $time = null)
 	{
 		$keys = $this->prefixArrayOfKeys($keys);
 		return parent::deleteMulti($keys, $time);
@@ -164,7 +167,7 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function deleteMultiByKey($server_key, array $keys, $time = 0)
+	public function deleteMultiByKey($server_key, $keys, $time = null)
 	{
 		$keys = $this->prefixArrayOfKeys($keys);
 		return parent::deleteByKey($server_key, $keys, $time);
@@ -173,7 +176,7 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function get($key, callable  $cache_kb = null, &$cas_token = null)
+	public function get($key, $cache_kb = null, &$cas_token = null)
 	{
 		$key = $this->prefix . $key;
 		return parent::get($key, $cache_kb, $cas_token);
@@ -182,7 +185,7 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function getByKey($server_key, $key, callable $cache_kb = null, &$cas_token = null)
+	public function getByKey($server_key, $key, $cache_kb = null, &$cas_token = null)
 	{
 		$key = $this->prefix . $key;
 		return parent::get($key, $cache_kb, $cas_token);
@@ -191,7 +194,7 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function getDelayed(array $keys, $with_cas = false, callable $value_cb = null)
+	public function getDelayed(array $keys, $with_cas = null, $value_cb = null)
 	{
 		$keys = $this->prefixArrayOfKeys($keys);
 		return parent::getDelayed($keys, $with_cas, $value_cb);
@@ -209,7 +212,7 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function getMulti(array $keys, array &$cas_tokens = array(), $flags = null)
+	public function getMulti(array $keys, &$cas_tokens = array(), $flags = null)
 	{
 		$keys = $this->prefixArrayOfKeys($keys);
 		return parent::getMulti($keys, $cas_tokens, $flags);
@@ -218,7 +221,7 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function getMultiByKey($server_key, array $keys, array &$cas_tokens = array(), $flags = null)
+	public function getMultiByKey($server_key, array $keys, &$cas_tokens = array(), $flags = null)
 	{
 		$keys = $this->prefixArrayOfKeys($keys);
 		return parent::getMultiByKey($server_key, $keys, $cas_tokens, $flags);
@@ -245,19 +248,19 @@ class MemcachedHandler extends \Memcached
 	/**
 	 * @inheritdoc
 	 */
-	public function prepend($key, $value)
+	public function prepend($key, $value, $expiration = null)
 	{
 		$key = $this->prefix . $key;
-		return parent::prepend($key, $value);
+		return parent::prepend($key, $value, $expiration);
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	public function prependByKey($server_key, $key, $value)
+	public function prependByKey($server_key, $key, $value, $expiration = null)
 	{
 		$key = $this->prefix . $key;
-		return parent::prependByKey($server_key, $key, $value);
+		return parent::prependByKey($server_key, $key, $value, $expiration);
 	}
 
 	/**
@@ -347,23 +350,49 @@ class MemcachedHandler extends \Memcached
         return parent::touchByKey($server_key, $key, $expiration);
     }
 
+	/**
+	 * @inheritdoc
+	 */
+    public function getAllKeys()
+    {
+        $keys = parent::getAllKeys();
+        foreach ($keys as $key => $cacheKey) {
+            if (strpos($cacheKey, $this->prefix) !== 0) {
+                unset($keys[$key]);
+            }
+        }
+        return $keys;
+    }
+
     /**
      * Delete of items for the set Key and throws exception if this is empty.
      *
      * @return bool
-     * @throws \Exception
+     *
      */
 	public function deleteAllForKey()
 	{
-		if (empty($this->prefix)) {
-            throw new \Exception('To use this method the prefix can not be empty', 500);
-        }
-        $keys = $this->getAllKeys();
-        foreach ($keys as $arrayKey => $value) {
-            if (strpos($value, $this->prefix) !== 0) {
-                unset($keys[$arrayKey]);
-            }
-        }
+		$keys = $this->getAllKeys();
         return parent::deleteMulti($keys);
+	}
+
+	/**
+	 * Delete all Keys for the given shell pattern
+	 * @param  string $pattern A valid Shell pattern
+	 * @param  int    $flags   Constant for fnmatch (http://php.net/manual/es/function.fnmatch.php)
+	 * @return bool          True if success False if fails.
+	 */
+	public function shellPatternDelete($pattern, $flags = 0)
+	{
+		$keys = $this->getAllKeys();
+		$deleted = false;
+		foreach ($keys as $i => $key) {
+			if (!fnmatch($this->prefix . $pattern, $key, $flags)) {
+				unset($keys[$i]);
+				continue;
+			}
+			$deleted = parent::delete($key);
+		}
+		return $deleted;
 	}
 }

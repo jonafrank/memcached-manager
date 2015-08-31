@@ -63,4 +63,36 @@ class MemcachedHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('value4', $this->memcached->get('noPrefixKey'));
         $this->memcached->delete('noPrefixKey');
     }
+
+    /**
+     * @covers \MemcachedManager\MemcachedHandler::deleteMulti
+     * @depends testGet
+     */
+    public function testDeleteMulti()
+    {
+
+        $this->handler->set('test1', 'value1');
+        $this->handler->set('test2', 'value2');
+        $this->handler->set('test3', 'value3');
+        $this->handler->deleteMulti(array('test1', 'test2'));
+        $this->assertFalse($this->handler->get('test1'));
+        $this->assertFalse($this->handler->get('test2'));
+        $this->assertEquals('value3', $this->handler->get('test3'));
+        $this->handler->delete('test3');
+    }
+
+    /**
+     * @covers \MemcachedManager\MemcachedHandler::shellPatternDelete
+     * @depends testDeleteMulti
+     */
+    public function testShellPatternDelete()
+    {
+        $this->handler->set('test1', 'value1');
+        $this->handler->set('test2', 'value2');
+        $this->handler->set('nodelete', 'value3');
+        $res = $this->handler->shellPatternDelete('test*');
+        $this->assertFalse($this->handler->get('test1'));
+        $this->assertFalse($this->handler->get('test2'));
+        $this->assertEquals('value3', $this->handler->get('nodelete'));
+    }
 }
